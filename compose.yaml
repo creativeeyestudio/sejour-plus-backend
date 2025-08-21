@@ -1,28 +1,30 @@
 name: sejour-plus-backend
 
 services:
-  
   api:
-    expose: ['9000']
     build:
       context: .
       dockerfile: dockerfile.prod
+    ports:
+      - "9002:80"   # Apache écoute toujours en interne sur 80 mais mappé sur 9002
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
-      - APP_ENV=prod
-      - CORS_ALLOW_ORIGIN=^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$
+      APP_ENV: prod
+      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}
     restart: always
-  
+    depends_on:
+      - database
+
   database:
-    image: postgres:${POSTGRES_VERSION}
+    image: postgres:${POSTGRES_VERSION:-16}
+    container_name: postgres_db
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-app}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-!ChangeMe!}
       - POSTGRES_USER=${POSTGRES_USER:-app}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-!ChangeMe!}
     volumes:
       - database_data:/var/lib/postgresql/data
+    restart: always
 
 volumes:
   database_data:
     driver: local
-    external: false

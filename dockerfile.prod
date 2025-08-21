@@ -1,50 +1,41 @@
-# ---- Étape 1 : Construire les dépendances PHP ----
-FROM php:8.2-fpm-alpine AS builder
-
-# Installer les dépendances nécessaires
-RUN apk add --no-cache \
-        git \
-        unzip \
-        bash \
-        icu-dev \
-        libzip-dev \
-        oniguruma-dev \
-        curl \
-        && docker-php-ext-install intl pdo pdo_mysql zip opcache
-
-# Installer Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Copier le code source
+# Étape 1 : builder vendor
+FROM composer:2 AS vendor
 WORKDIR /app
-COPY . /app
 
-# Installer les dépendances PHP en mode production
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copier uniquement composer.* d'abord (pour cache docker)
+COPY composer.json composer.lock ./
 
-RUN php bin/console cache:clear --env=prod --no-debug \
-    && php bin/console cache:warmup --env=prod
+# Installer deps sans exécuter les scripts Symfony (qui nécessitent bin/console)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-# ---- Étape 2 : Préparer l'image finale ----
-FROM php:8.2-fpm-alpine AS prod
+# Ensuite on copie le reste du projet
+COPY . .
 
-# Installer les extensions PHP nécessaires en production
-RUN apk add --no-cache \
-        icu-dev \
-        libzip-dev \
-        oniguruma-dev \
-        bash \
-        && docker-php-ext-install intl pdo pdo_mysql zip opcache
+# Et on rejoue les scripts auto-scripts une fois que bin/console est là
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Copier le code et les dépendances depuis l'étape builder
-WORKDIR /app
-COPY --from=builder /app /app
+# Étape 2 : image finale
+FROM php:8.2-apache
 
-# Configurer PHP-FPM pour la production
-COPY ./docker/php/conf.d /usr/local/etc/php/conf.d/
+# Installer dépendances système utiles
+RUN apt-get update && apt-get install -y \
+    git unzip libpq-dev libicu-dev libzip-dev zlib1g-dev \
+    && docker-php-ext-install pdo pdo_pgsql intl opcache zip \
+    && a2enmod rewrite headers
 
-# Exposer le port 9000 pour PHP-FPM
-EXPOSE 9000
+# Config Apache pour Symfony (DocumentRoot sur public/)
+COPY ./docker/apache/vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# Commande par défaut
-CMD ["php-fpm"]
+# Copier le code + vendor
+WORKDIR /var/www/html
+COPY --from=vendor /app ./
+
+# Droits
+RUN chown -R www-data:www-data /var/www/html/var /var/www/html/public
+
+# Variables d'env
+ENV APP_ENV=prod
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]
