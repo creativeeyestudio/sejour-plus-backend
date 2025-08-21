@@ -1,0 +1,50 @@
+# ---- Étape 1 : Construire les dépendances PHP ----
+FROM php:8.2-fpm-alpine AS builder
+
+# Installer les dépendances nécessaires
+RUN apk add --no-cache \
+        git \
+        unzip \
+        bash \
+        icu-dev \
+        libzip-dev \
+        oniguruma-dev \
+        curl \
+        && docker-php-ext-install intl pdo pdo_mysql zip opcache
+
+# Installer Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copier le code source
+WORKDIR /app
+COPY . /app
+
+# Installer les dépendances PHP en mode production
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+RUN php bin/console cache:clear --env=prod --no-debug \
+    && php bin/console cache:warmup --env=prod
+
+# ---- Étape 2 : Préparer l'image finale ----
+FROM php:8.2-fpm-alpine AS prod
+
+# Installer les extensions PHP nécessaires en production
+RUN apk add --no-cache \
+        icu-dev \
+        libzip-dev \
+        oniguruma-dev \
+        bash \
+        && docker-php-ext-install intl pdo pdo_mysql zip opcache
+
+# Copier le code et les dépendances depuis l'étape builder
+WORKDIR /app
+COPY --from=builder /app /app
+
+# Configurer PHP-FPM pour la production
+COPY ./docker/php/conf.d /usr/local/etc/php/conf.d/
+
+# Exposer le port 9000 pour PHP-FPM
+EXPOSE 9000
+
+# Commande par défaut
+CMD ["php-fpm"]
