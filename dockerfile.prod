@@ -2,40 +2,25 @@
 FROM composer:2 AS vendor
 WORKDIR /app
 
-# Copier uniquement composer.* d'abord (pour cache docker)
 COPY composer.json composer.lock ./
-
-# Installer deps sans exécuter les scripts Symfony (qui nécessitent bin/console)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
-
-# Ensuite on copie le reste du projet
 COPY . .
 
-# Et on rejoue les scripts auto-scripts une fois que bin/console est là
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # Étape 2 : image finale
 FROM php:8.2-apache
 
-# Installer dépendances système utiles
 RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev libicu-dev libzip-dev zlib1g-dev \
-    && docker-php-ext-install pdo pdo_pgsql intl opcache zip \
+    git unzip libicu-dev libzip-dev zlib1g-dev \
+    && docker-php-ext-install pdo pdo_mysql intl opcache zip \
     && a2enmod rewrite headers
 
-# Config Apache pour Symfony (DocumentRoot sur public/)
 COPY ./docker/apache/vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# Copier le code + vendor
 WORKDIR /var/www/html
 COPY --from=vendor /app ./
 
-# Droits
 RUN chown -R www-data:www-data /var/www/html/var /var/www/html/public
 
-# Variables d'env
-ENV APP_ENV=prod
-
 EXPOSE 80
-
 CMD ["apache2-foreground"]

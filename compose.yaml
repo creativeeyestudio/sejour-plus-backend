@@ -6,23 +6,39 @@ services:
       context: .
       dockerfile: dockerfile.prod
     ports:
-      - "9002:80"   # Apache écoute toujours en interne sur 80 mais mappé sur 9002
+      - "9002:80"
     environment:
-      APP_ENV: prod
-      DATABASE_URL: postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}
+      APP_ENV: dev
+      DATABASE_URL: mysql://${MYSQL_USER:-app}:${MYSQL_PASSWORD:-!ChangeMe!}@database:3306/${MYSQL_DATABASE:-app}
     restart: always
     depends_on:
       - database
 
   database:
-    image: postgres:${POSTGRES_VERSION:-16}
-    container_name: postgres_db
+    image: mysql:8.1
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-app}
-      - POSTGRES_USER=${POSTGRES_USER:-app}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-!ChangeMe!}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
     volumes:
-      - database_data:/var/lib/postgresql/data
+      - database_data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3307:3306"  # optionnel, exposer MySQL si nécessaire
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-app}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
+    ports:
+      - "9003:80"  # accès via http://localhost:9003
+    depends_on:
+      - database
     restart: always
 
 volumes:
