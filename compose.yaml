@@ -13,6 +13,8 @@ services:
     restart: always
     depends_on:
       - database
+    networks:
+      - proxy
 
   database:
     image: mysql:8.1
@@ -27,6 +29,8 @@ services:
     ports:
       - "3307:3306"  # optionnel, exposer MySQL si nécessaire
     restart: always
+    networks:
+      - proxy
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -40,7 +44,13 @@ services:
     depends_on:
       - database
     restart: always
+    networks:
+      - proxy
 
 volumes:
   database_data:
     driver: local
+
+networks:
+  proxy:
+    external: true
