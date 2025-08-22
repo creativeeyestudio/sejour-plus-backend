@@ -1,6 +1,11 @@
 api_platform:
-    title: Hello API Platform
+    title: Sejour+ Admin
     version: 1.0.0
+    docs_formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+        html: ['text/html']
+        jsonopenapi: ['application/vnd.openapi+json']
     defaults:
         stateless: true
         cache_headers:
