@@ -1,5 +1,17 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
+    trusted_proxies: 
+        # IPv4 loopback + toutes les adresses qui peuvent passer par un proxy local
+        - 127.0.0.1
+        - ::1
+        # Si tu utilises Symfony CLI, ajoute l'IP du serveur interne
+        - 127.0.0.1/8
+    trusted_headers: 
+        - x-forwarded-for
+        - x-forwarded-proto
+        - x-forwarded-port
+        - x-forwarded-host
+
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
