@@ -3,9 +3,11 @@ api_platform:
     version: 1.0.0
     docs_formats:
         jsonld: ['application/ld+json']
-        json: ['application/json']
         html: ['text/html']
-        jsonopenapi: ['application/vnd.openapi+json']
+    patch_formats:
+        json: ['application/merge-patch+json']
+    mapping:
+        paths: ['%kernel.project_dir%/src/Entity']
     defaults:
         stateless: true
         cache_headers:
