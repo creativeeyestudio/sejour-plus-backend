@@ -25,7 +25,7 @@ use Doctrine\ORM\Mapping as ORM;
         new GetCollection(
             uriTemplate: '/categories/hotel-internal/{hotel_internal}',
             uriVariables: 'hotel_internal',
-            requirements: ['hotel_internal' => 'true|false'],
+            requirements: ['hotel_internal' => '1|0'],
         ),
         new Post(uriTemplate: '/categories'),
         new Patch(uriTemplate: '/categories/{id}'),
