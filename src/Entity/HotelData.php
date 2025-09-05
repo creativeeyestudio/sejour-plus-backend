@@ -25,7 +25,7 @@ class HotelData
     #[ORM\Column(length: 255)]
     private ?string $hotel_name = null;
 
-    #[ORM\Column(type: Types::BIGINT)]
+    #[ORM\Column(length: 255)]
     private ?string $hotel_phone = null;
 
     #[ORM\Column(length: 255)]
