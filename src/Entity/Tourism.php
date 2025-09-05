@@ -44,7 +44,7 @@ class Tourism
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $tourism_reserve = null;
 
-    #[ORM\Column(type: Types::BIGINT, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $tourism_phone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
