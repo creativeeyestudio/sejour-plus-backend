@@ -13,6 +13,15 @@
             "./src/ApiResource/.gitignore"
         ]
     },
+    "doctrine/annotations": {
+        "version": "2.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.10",
+            "ref": "64d8583af5ea57b7afa4aba4b159907f3a148b05"
+        }
+    },
     "doctrine/deprecations": {
         "version": "1.1",
         "recipe": {
@@ -47,6 +56,22 @@
         "files": [
             "./config/packages/doctrine_migrations.yaml",
             "./migrations/.gitignore"
+        ]
+    },
+    "hakam/multi-tenancy-bundle": {
+        "version": "2.9",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "2.8",
+            "ref": "469c5431acaac0e5f17ce4dd26e0d9a6a4adcc76"
+        },
+        "files": [
+            "./config/packages/hakam_multi_tenancy.yaml",
+            "./src/Entity/Main/.gitignore",
+            "./src/Entity/Tenant/.gitignore",
+            "./migrations/Main/.gitignore",
+            "./migrations/Tenant/.gitignore"
         ]
     },
     "nelmio/cors-bundle": {
